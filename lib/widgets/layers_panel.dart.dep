@@ -1,0 +1,453 @@
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+//
+// import '../editor/editor_controller.dart';
+// import '../models/template_element.dart';
+//
+// /// Layers Panel - Manage element layers
+// class LayersPanel extends StatelessWidget {
+//   const LayersPanel({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Consumer<InvoiceEditorController>(
+//       builder: (context, controller, _) {
+//         final sortedElements = [...controller.elements]
+//           ..sort((a, b) => b.zIndex.compareTo(a.zIndex));
+//
+//         final hasSelection = controller.selectedIds.isNotEmpty;
+//         final canGroup = controller.selectedIds.length >= 2;
+//         final canUngroup = controller.selectedIds.length == 1 &&
+//             controller.selectedElements.firstOrNull is GroupElement;
+//
+//         return Container(
+//           decoration: BoxDecoration(
+//             color: Colors.white,
+//             border: Border(right: BorderSide(color: Colors.grey.shade300)),
+//           ),
+//           child: Column(
+//             children: [
+//               // Header
+//               Container(
+//                 padding: const EdgeInsets.all(12),
+//                 decoration: BoxDecoration(
+//                   border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+//                 ),
+//                 child: Row(
+//                   children: [
+//                     const Icon(Icons.layers, size: 20),
+//                     const SizedBox(width: 8),
+//                     const Text(
+//                       'Layers',
+//                       style: TextStyle(fontWeight: FontWeight.bold),
+//                     ),
+//                     const Spacer(),
+//                     Text(
+//                       '${controller.elements.length}',
+//                       style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//
+//               // Action Buttons (visible when selection exists)
+//               if (hasSelection)
+//                 Container(
+//                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+//                   decoration: BoxDecoration(
+//                     color: Colors.blue.shade50,
+//                     border: Border(bottom: BorderSide(color: Colors.blue.shade100)),
+//                   ),
+//                   child: Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                     children: [
+//                       _ActionButton(
+//                         icon: Icons.content_copy,
+//                         label: 'Duplicate',
+//                         tooltip: 'Duplicate (Ctrl+D)',
+//                         onPressed: controller.duplicateSelected,
+//                       ),
+//                       _ActionButton(
+//                         icon: Icons.delete_outline,
+//                         label: 'Delete',
+//                         tooltip: 'Delete (Del)',
+//                         onPressed: controller.removeSelected,
+//                         color: Colors.red,
+//                       ),
+//                       _ActionButton(
+//                         icon: Icons.group_work,
+//                         label: 'Group',
+//                         tooltip: 'Group (Ctrl+G)',
+//                         onPressed: canGroup ? controller.groupSelected : null,
+//                       ),
+//                       _ActionButton(
+//                         icon: Icons.workspaces_outline,
+//                         label: 'Ungroup',
+//                         tooltip: 'Ungroup (Ctrl+Shift+G)',
+//                         onPressed: canUngroup ? controller.ungroupSelected : null,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//
+//               // Layers List
+//               Expanded(
+//                 child: sortedElements.isEmpty
+//                     ? _buildEmptyState()
+//                     : ReorderableListView.builder(
+//                   buildDefaultDragHandles: false,
+//                   itemCount: sortedElements.length,
+//                   onReorder: (oldIndex, newIndex) {
+//                     // Reorder logic
+//                     if (newIndex > oldIndex) newIndex--;
+//                     final element = sortedElements[oldIndex];
+//                     if (newIndex == 0) {
+//                       controller.bringToFront(element.id);
+//                     } else if (newIndex == sortedElements.length - 1) {
+//                       controller.sendToBack(element.id);
+//                     }
+//                   },
+//                   itemBuilder: (context, index) {
+//                     final element = sortedElements[index];
+//                     final isSelected = controller.selectedIds.contains(element.id);
+//
+//                     return _LayerItem(
+//                       key: ValueKey(element.id),
+//                       element: element,
+//                       isSelected: isSelected,
+//                       index: index,
+//                       onTap: () => controller.selectElement(element.id),
+//                       onToggleVisibility: () => controller.toggleVisibility(element.id),
+//                       onToggleLock: () => controller.toggleLock(element.id),
+//                       onDelete: () => controller.removeElement(element.id),
+//                       onDuplicate: () => controller.duplicateElement(element.id),
+//                     );
+//                   },
+//                 ),
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+//
+//   Widget _buildEmptyState() {
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           Icon(Icons.layers_clear, size: 48, color: Colors.grey.shade400),
+//           const SizedBox(height: 16),
+//           Text(
+//             'No layers yet',
+//             style: TextStyle(color: Colors.grey.shade600),
+//           ),
+//           const SizedBox(height: 8),
+//           Text(
+//             'Add elements using the toolbar',
+//             style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+//
+// class _LayerItem extends StatelessWidget {
+//   final TemplateElement element;
+//   final bool isSelected;
+//   final int index;
+//   final VoidCallback onTap;
+//   final VoidCallback onToggleVisibility;
+//   final VoidCallback onToggleLock;
+//   final VoidCallback onDelete;
+//   final VoidCallback onDuplicate;
+//
+//   const _LayerItem({
+//     super.key,
+//     required this.element,
+//     required this.isSelected,
+//     required this.index,
+//     required this.onTap,
+//     required this.onToggleVisibility,
+//     required this.onToggleLock,
+//     required this.onDelete,
+//     required this.onDuplicate,
+//   });
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+//       decoration: BoxDecoration(
+//         color: isSelected ? Colors.blue.shade50 : Colors.transparent,
+//         borderRadius: BorderRadius.circular(8),
+//         border: isSelected ? Border.all(color: Colors.blue.shade200) : null,
+//       ),
+//       child: InkWell(
+//         onTap: onTap,
+//         borderRadius: BorderRadius.circular(8),
+//         child: Padding(
+//           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//           child: Row(
+//             children: [
+//               // Drag Handle
+//               ReorderableDragStartListener(
+//                 index: index,
+//                 child: const MouseRegion(
+//                   cursor: SystemMouseCursors.grab,
+//                   child: Icon(Icons.drag_indicator, size: 18, color: Colors.grey),
+//                 ),
+//               ),
+//
+//               const SizedBox(width: 8),
+//
+//               // Type Icon
+//               Container(
+//                 padding: const EdgeInsets.all(4),
+//                 decoration: BoxDecoration(
+//                   color: _getTypeColor(element.type),
+//                   borderRadius: BorderRadius.circular(4),
+//                 ),
+//                 child: Icon(
+//                   _getTypeIcon(element.type),
+//                   size: 14,
+//                   color: _getTypeIconColor(element.type),
+//                 ),
+//               ),
+//
+//               const SizedBox(width: 8),
+//
+//               // Name
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       element.name,
+//                       style: TextStyle(
+//                         fontSize: 12,
+//                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+//                         color: element.isVisible ? Colors.black : Colors.grey,
+//                         decoration: element.isVisible ? null : TextDecoration.lineThrough,
+//                       ),
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                     Text(
+//                       element.type.name,
+//                       style: TextStyle(
+//                         fontSize: 10,
+//                         color: Colors.grey.shade600,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//
+//               // Visibility Toggle
+//               IconButton(
+//                 icon: Icon(
+//                   element.isVisible ? Icons.visibility : Icons.visibility_off,
+//                   size: 16,
+//                   color: element.isVisible ? Colors.grey.shade600 : Colors.grey.shade400,
+//                 ),
+//                 onPressed: onToggleVisibility,
+//                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+//                 padding: EdgeInsets.zero,
+//                 tooltip: element.isVisible ? 'Hide' : 'Show',
+//               ),
+//
+//               // Lock Toggle
+//               IconButton(
+//                 icon: Icon(
+//                   element.isLocked ? Icons.lock : Icons.lock_open,
+//                   size: 16,
+//                   color: element.isLocked ? Colors.orange : Colors.grey.shade400,
+//                 ),
+//                 onPressed: onToggleLock,
+//                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+//                 padding: EdgeInsets.zero,
+//                 tooltip: element.isLocked ? 'Unlock' : 'Lock',
+//               ),
+//
+//               // More Options
+//               PopupMenuButton<String>(
+//                 icon: const Icon(Icons.more_vert, size: 16),
+//                 iconSize: 16,
+//                 padding: EdgeInsets.zero,
+//                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+//                 onSelected: (value) {
+//                   switch (value) {
+//                     case 'duplicate':
+//                       onDuplicate();
+//                       break;
+//                     case 'delete':
+//                       onDelete();
+//                       break;
+//                   }
+//                 },
+//                 itemBuilder: (context) => [
+//                   const PopupMenuItem(
+//                     value: 'duplicate',
+//                     child: Row(
+//                       children: [
+//                         Icon(Icons.content_copy, size: 18),
+//                         SizedBox(width: 8),
+//                         Text('Duplicate'),
+//                       ],
+//                     ),
+//                   ),
+//                   const PopupMenuItem(
+//                     value: 'delete',
+//                     child: Row(
+//                       children: [
+//                         Icon(Icons.delete, size: 18, color: Colors.red),
+//                         SizedBox(width: 8),
+//                         Text('Delete', style: TextStyle(color: Colors.red)),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+// // Update _getTypeIcon method:
+//   IconData _getTypeIcon(ElementType type) {
+//     switch (type) {
+//       case ElementType.text:
+//         return Icons.text_fields;
+//       case ElementType.image:
+//         return Icons.image;
+//       case ElementType.table:
+//         return Icons.table_chart;
+//       case ElementType.shape:
+//         return Icons.rectangle_outlined;
+//       case ElementType.qrCode:
+//         return Icons.qr_code;
+//
+//       case ElementType.group:
+//         return Icons.folder;
+//       case ElementType.signature:
+//         return Icons.draw;
+//       case ElementType.background:
+//         return Icons.wallpaper;
+//       case ElementType.svg:  // NEW
+//         return Icons.extension;
+//     }
+//   }
+//
+// // Update _getTypeColor method:
+//   Color _getTypeColor(ElementType type) {
+//     switch (type) {
+//       case ElementType.text:
+//         return Colors.blue.shade100;
+//       case ElementType.image:
+//         return Colors.green.shade100;
+//       case ElementType.table:
+//         return Colors.purple.shade100;
+//       case ElementType.shape:
+//         return Colors.orange.shade100;
+//       case ElementType.qrCode:
+//         return Colors.teal.shade100;
+//       case ElementType.group:
+//         return Colors.pink.shade100;
+//       case ElementType.signature:
+//         return Colors.indigo.shade100;
+//       case ElementType.background:
+//         return Colors.cyan.shade100;
+//       case ElementType.svg:  // NEW
+//         return Colors.deepPurple.shade100;
+//     }
+//   }
+//
+// // Update _getTypeIconColor method:
+//   Color _getTypeIconColor(ElementType type) {
+//     switch (type) {
+//       case ElementType.text:
+//         return Colors.blue.shade700;
+//       case ElementType.image:
+//         return Colors.green.shade700;
+//       case ElementType.table:
+//         return Colors.purple.shade700;
+//       case ElementType.shape:
+//         return Colors.orange.shade700;
+//       case ElementType.qrCode:
+//         return Colors.teal.shade700;
+//
+//       case ElementType.group:
+//         return Colors.pink.shade700;
+//       case ElementType.signature:
+//         return Colors.indigo.shade700;
+//       case ElementType.background:
+//         return Colors.cyan.shade700;
+//       case ElementType.svg:  // NEW
+//         return Colors.deepPurple.shade700;
+//     }
+//   }
+//
+// }
+//
+// /// Action Button Widget for Layers Panel
+// class _ActionButton extends StatelessWidget {
+//   final IconData icon;
+//   final String label;
+//   final String tooltip;
+//   final VoidCallback? onPressed;
+//   final Color? color;
+//
+//   const _ActionButton({
+//     required this.icon,
+//     required this.label,
+//     required this.tooltip,
+//     required this.onPressed,
+//     this.color,
+//   });
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final isEnabled = onPressed != null;
+//     final buttonColor = color ?? Colors.grey.shade700;
+//
+//     return Tooltip(
+//       message: tooltip,
+//       child: InkWell(
+//         onTap: onPressed,
+//         borderRadius: BorderRadius.circular(6),
+//         child: Container(
+//           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//           decoration: BoxDecoration(
+//             color: isEnabled ? Colors.white : Colors.grey.shade100,
+//             borderRadius: BorderRadius.circular(6),
+//             border: Border.all(
+//               color: isEnabled ? Colors.grey.shade300 : Colors.grey.shade200,
+//             ),
+//           ),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Icon(
+//                 icon,
+//                 size: 18,
+//                 color: isEnabled ? buttonColor : Colors.grey.shade400,
+//               ),
+//               const SizedBox(height: 2),
+//               Text(
+//                 label,
+//                 style: TextStyle(
+//                   fontSize: 10,
+//                   color: isEnabled ? buttonColor : Colors.grey.shade400,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

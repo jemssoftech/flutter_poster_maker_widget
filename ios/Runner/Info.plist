@@ -28,6 +28,40 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	
+	<!-- Photo Library permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to photo library to save invoice images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs access to save generated invoice images to your photo library.</string>
+	
+	<!-- Camera permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture photos for invoices.</string>
+	
+	<!-- Documents directory access -->
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	
+	<!-- Supported file types -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>PDF</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.adobe.pdf</string>
+			</array>
+		</dict>
+	</array>
+	
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -45,5 +79,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Photo Library Permissions -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs access to save exported images to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to save exported images.</string>
 </dict>
 </plist>
